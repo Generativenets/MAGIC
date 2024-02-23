@@ -8,3 +8,4 @@ When a graph learning model is trained on the original graph $G_t$, nodes on $G_
 
 ## Magic Method
 
+For new node v on updated graph $G_{t+1}$, we select its 1-hop neighbors on the original graph $G_{t}$ and aggregated these nodes embedding. The aggreagted embedding is combined with v's node feature and fed into an MLP, 
