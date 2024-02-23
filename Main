@@ -4,10 +4,10 @@ from torch_geometric.datasets import Planetoid
 from torch_geometric.utils import to_dense_adj, add_self_loops
 import numpy as np
 from torch_geometric.nn import GCNConv
+from torch_geometric.nn import SAGEConv
 from torch_geometric.datasets import Amazon
-import time
 
-# upload the dataset
+# loading dataset
 dataset = Planetoid(root='/tmp/Cora', name='Cora')
 #dataset = Planetoid(root='/tmp/Citeseer', name='Citeseer')
 #dataset = Planetoid(root='/tmp/Pubmed', name='Pubmed')
@@ -16,24 +16,20 @@ dataset = Planetoid(root='/tmp/Cora', name='Cora')
 data = dataset[0]
 
 # divide the dataset 
-x = int(data.x.size(0) * 0.5 * 0.5)  # nodes on the original graph
-y = int(data.x.size(0) * 0.5 * 1)-x  # 训练集节点数量
-n = data.x.size(0)-x
-k = y
-
-
+n = int(data.x.size(0) * 0.6)
+k = int(n * 0.6)
 all_nodes = np.arange(data.num_nodes)
 np.random.shuffle(all_nodes)
 masked_nodes = torch.tensor(all_nodes[:n], dtype=torch.long)
-train_masked_nodes = masked_nodes[:k]   # adaptation nodes on the updated graph
-test_masked_nodes = masked_nodes[k:]    # test nodes on the updated graph
+train_masked_nodes = masked_nodes[:k]
+test_masked_nodes = masked_nodes[k:]
 
-# 创建训练掩码
+# mask selected nodes
 train_mask = torch.ones(data.num_nodes, dtype=bool)
 train_mask[masked_nodes] = False
 data.train_mask = train_mask
 
-# remove new nodes's edges
+# 移除与masked nodes相关的边并重新映射索引
 def remap_index(edge_index, mask):
     mask = mask.nonzero(as_tuple=False).squeeze()
     remapped_dict = {old_idx: new_idx for new_idx, old_idx in enumerate(mask.tolist())}
@@ -47,7 +43,7 @@ def remap_index(edge_index, mask):
 
 train_edge_index = remap_index(data.edge_index, data.train_mask)
 
-# defining a graph learning model on the original graph, for example: GCN
+# defining the graph learning model on the original graph, for instance, GCN
 class GCN(torch.nn.Module):
     def __init__(self, num_features, num_classes):
         super(GCN, self).__init__()
@@ -60,43 +56,47 @@ class GCN(torch.nn.Module):
         x = self.conv2(x, edge_index)
         return x
 
-# training the model on the original graph
+
+
+# training the graph learning model
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = GCN(dataset.num_node_features, dataset.num_classes).to(device)
 data = data.to(device)
 model.train()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
-for epoch in range(200):
+for epoch in range(300):
     optimizer.zero_grad()
     out = model(data.x[data.train_mask], train_edge_index)
     loss = F.nll_loss(F.log_softmax(out, dim=1), data.y[data.train_mask])
     loss.backward()
     optimizer.step()
 
-# get embeddings for nodes on the original graph
+# derive embeddings on the original graph
 model.eval()
 with torch.no_grad():
     embeddings = model(data.x[data.train_mask], train_edge_index)
 
-# defining the inference model: MAGIC
+
+
 class Predictor(torch.nn.Module):
     def __init__(self, num_features, num_classes):
         super(Predictor, self).__init__()
-        self.fc = torch.nn.Linear(num_features, num_classes)
+        self.f1 = torch.nn.Linear(num_features, 16)
+        self.f2 = torch.nn.Linear(16, num_classes)
+
 
     def forward(self, x):
-        x = F.relu(self.fc(x))
+        x = F.relu(self.f1(x))
+        x = F.relu(self.f2(x))
         return F.log_softmax(x, dim=1)
-
-
 
 predictor = Predictor(dataset.num_node_features + dataset.num_classes, dataset.num_classes).to(device)
 
-# 准备预测模型的训练数据
+# preparing data for adaptation
 edge_index, _ = add_self_loops(data.edge_index)
 adj = to_dense_adj(edge_index)[0].to(device)
 
-# 创建原始节点索引到训练集节点索引的映射
+
 train_node_mapping = {old_idx.item(): new_idx for new_idx, old_idx in enumerate(data.train_mask.nonzero())}
 
 train_embeddings = []
@@ -116,10 +116,10 @@ for node in train_masked_nodes:
 train_embeddings = torch.stack(train_embeddings)
 train_labels = torch.stack(train_labels)
 
-# Adaptating MAGIC on the updated graph
+# Adapatation
 predictor_optimizer = torch.optim.Adam(predictor.parameters(), lr=0.01, weight_decay=5e-4)
 predictor.train()
-for epoch in range(300):
+for epoch in range(50):
     predictor_optimizer.zero_grad()
     out = predictor(train_embeddings)
     loss = F.nll_loss(out, train_labels)
@@ -128,8 +128,6 @@ for epoch in range(300):
 
 # predicting nodes on the updated graph
 predictor.eval()
-
-
 test_embeddings = []
 test_labels = data.y[test_masked_nodes].cpu().numpy()
 with torch.no_grad():
@@ -141,19 +139,16 @@ with torch.no_grad():
             aggregated_embedding = embeddings[neighbor_train_nodes].mean(dim=0)
         else:
             aggregated_embedding = torch.zeros_like(embeddings[0])
-        aggregated_embedding = torch.zeros_like(embeddings[0])
         node_embedding = torch.cat((aggregated_embedding, data.x[node]), dim=0)
         test_embeddings.append(node_embedding)
-        
-
 
     test_embeddings = torch.stack(test_embeddings)
     predictions = predictor(test_embeddings).max(1)[1].cpu().numpy()
 
-
-# Calculating the accuracy
+# predicting accuracy
 correct = (predictions == test_labels).sum()
 accuracy = correct / len(test_masked_nodes)
 print("Prediction accuracy: {:.1f}%".format(100 * accuracy))
+
 
 
