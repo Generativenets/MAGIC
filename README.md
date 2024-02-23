@@ -12,4 +12,4 @@ For a new node v on updated graph $G_{t+1}=(V_t,E_t)$, we select its 1-hop neigh
 
 ## Implement Details
 
-All code is written in Python 3.10.12, utilizing PyTorch 2.1.0+cu121. 
+All code is written in Python 3.10.12, utilizing PyTorch 2.1.0+cu121.  We demonstrated the inference capabilities of MAGIC based on the PyG (PyTorch Geometric) framework, using the Cora dataset as an example.
