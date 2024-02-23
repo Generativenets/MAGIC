@@ -8,4 +8,6 @@ When a graph learning model is trained on the original graph $G_t$, nodes on $G_
 
 ## Magic Method
 
-For a new node v on updated graph $G_{t+1}=(V_t,E_t)$, we select its 1-hop neighbors on the original graph $G_{t}=(V_{t+1},E_{t+1})$ and aggregated these nodes embedding: $\mathbf{a}_v = \frac{1}{|\mathcal{N}(v)\cap \mathcal{V}_0|} \sum_{u \in \mathcal{N}(v)\cap \mathcal{V}_0} \mathbf{h}_u.$. The aggreagted embedding is combined with v's node feature and fed into an MLP predictor. The predictor needs to be adapted to the updated graph by several steps of learning. 
+For a new node v on updated graph $G_{t+1}=(V_t,E_t)$, we select its 1-hop neighbors on the original graph $G_{t}=(V_{t+1},E_{t+1})$ and aggregated these nodes embedding. The aggreagted embedding is combined with v's node feature and fed into an MLP predictor. The predictor needs to be adapted to the updated graph by several steps of learning. 
+
+## Implement Details
