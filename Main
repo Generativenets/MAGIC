@@ -16,8 +16,17 @@ dataset = Planetoid(root='/tmp/Cora', name='Cora')
 data = dataset[0]
 
 # divide the dataset 
-n = int(data.x.size(0) * 0.6)
-k = int(n * 0.6)
+#n = int(data.x.size(0) * 0.6)
+#k = int(n * 0.6)
+
+x = int(data.x.size(0) * 0.5 * 0.5)  # nodes on the original graph
+y = int(data.x.size(0) * 0.5 * 1)-x  # nodes for adaptation
+n = data.x.size(0)-x
+k = y
+
+
+
+
 all_nodes = np.arange(data.num_nodes)
 np.random.shuffle(all_nodes)
 masked_nodes = torch.tensor(all_nodes[:n], dtype=torch.long)
@@ -29,7 +38,7 @@ train_mask = torch.ones(data.num_nodes, dtype=bool)
 train_mask[masked_nodes] = False
 data.train_mask = train_mask
 
-# 移除与masked nodes相关的边并重新映射索引
+# remove masked nodes' edges
 def remap_index(edge_index, mask):
     mask = mask.nonzero(as_tuple=False).squeeze()
     remapped_dict = {old_idx: new_idx for new_idx, old_idx in enumerate(mask.tolist())}
