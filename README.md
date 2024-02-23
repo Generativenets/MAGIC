@@ -1,6 +1,6 @@
 # MAGIC
 
-MAGIC(Model-agnostic Efficient Graph Inference) is a model agnostic efficient inference method for nodes on an updated graph.
+MAGIC is a model agnostic efficient inference method for deriving node embedding on an updated graph.
 
 ## Application Scenario
 
