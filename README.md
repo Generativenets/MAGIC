@@ -14,8 +14,9 @@ For a new node v on updated graph $G_{t+1}=(V_t,E_t)$, we select its 1-hop neigh
 ## Implement Details
 All code is written in Python 3.10.12, utilizing PyTorch 2.1.0+cu121.  We demonstrated the inference capabilities of MAGIC based on the PyG (PyTorch Geometric) framework, using the Cora dataset as an example(You can use any graph datasets you like). The dataset is divided into 3 parts. The first part is the original graph, a graph learning model is trained on it and we have embedding for nodes on the original graph. In our code, we choose a 2-layer GCN node classification model as the graph learning model on the original graph and the original graph contains 25% of nodes of the full graph.The second part is the set for adaptation, containing 25% nodes of the original graph . In our implement, we use a 2-layer MLP as the predictor and the predictor is also trained by a node classification task.The third part is new nodes on the updated graph, containing 50% nodes of the full graph. We test the embedding quality by a node classification task on this part. Intuitively, a high predicting accuracy means the embedding quality is good.
 
-## Environment Installation
-Install torch:
+## Environment Installation: A Quick Start
+In order to run our code, we need to install torch and PyG with speific version. Here is a quick start of running our code.
+First, you need to install torch:
 <pre>
 ```python
 # CUDA versions: cpu, cu92, cu101, cu102, cu101, cu111, cu121
@@ -23,7 +24,7 @@ pip install torch==2.1.0+cu121 -f https://download.pytorch.org/whl/torch_stable.
 ```
 </pre>
 
-Install PyG:
+Then, you should install PyG with specific version:
 <pre>
 ```python
 # CUDA versions: cpu, cu92, cu101, cu102, cu101, cu111, cu121
@@ -37,6 +38,7 @@ pip install torch-spline-conv -f https://pytorch-geometric.com/whl/torch-${TORCH
 pip install torch-geometric
 ```
 </pre>
+It is highly recommanded that you should run our code in colab.
 
 # Notification
 Notably, MAGIC is a model-agnostic method. Any supervised , unsupervised or self-supervised graph learning models can serves as the graph learning model on the original graph.
