@@ -38,6 +38,7 @@ pip install torch-spline-conv -f https://pytorch-geometric.com/whl/torch-${TORCH
 pip install torch-geometric
 ```
 </pre>
+After doing these installation, our code is available to run. You can use a variety of graph datasets instead of Cora in our code. Moreover, the GCN in our code can be replaced by other graph learning models. For instance, GAT or Graph-MLP.
 It is highly recommanded that you should run our code in colab.
 
 # Notification
