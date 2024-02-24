@@ -17,15 +17,15 @@ All code is written in Python 3.10.12, utilizing PyTorch 2.1.0+cu121.  We demons
 ## Environment Installation: A Quick Start
 In order to run our code, we need to install torch and PyG with speific version. Here is a quick start of running our code.
 First, you need to install torch:
-<pre>
+
 ```python
 # CUDA versions: cpu, cu92, cu101, cu102, cu101, cu111, cu121
 pip install torch==2.1.0+cu121 -f https://download.pytorch.org/whl/torch_stable.html
 ```
-</pre>
+
 
 Then, you should install PyG with specific version:
-<pre>
+
 ```python
 # CUDA versions: cpu, cu92, cu101, cu102, cu101, cu111, cu121
 # TORCH versions: 1.4.0, 1.5.0, 1.6.0, 1.7.0, 1.8.0
@@ -37,7 +37,7 @@ pip install torch-cluster -f https://pytorch-geometric.com/whl/torch-${TORCH}+${
 pip install torch-spline-conv -f https://pytorch-geometric.com/whl/torch-${TORCH}+${CUDA}.html
 pip install torch-geometric
 ```
-</pre>
+
 After doing these installation, our code is available to run. You can use a variety of graph datasets instead of Cora in our code. Moreover, the GCN in our code can be replaced by other graph learning models. For instance, GAT or Graph-MLP.
 It is highly recommanded that you should run our code in colab.
 
